@@ -1,5 +1,9 @@
 const db = await Deno.openKv();
 
+/**
+ * Gets the open/closed status of the bar
+ * @returns {Promise<boolean>} The open/closed status of the bar
+ */
 async function getStatus() {
   const status = await db.get<boolean>(["status"]);
 
@@ -11,6 +15,10 @@ async function getStatus() {
   return status.value;
 }
 
+/**
+ * Sets the open/closed status of the bar
+ * @param {boolean} value
+ */
 async function setStatus(value: boolean) {
   await db.set(["status"], value);
 }
@@ -20,13 +28,27 @@ Deno.serve({
   handler: async (req) => {
     const pathname = new URL(req.url).pathname;
 
-    if (pathname === "/") {
+    /**
+     * For health checks
+     *
+     * GET /
+     *
+     * Returns a 200 OK response
+     */
+    if (pathname === "/" && req.method === "GET") {
       return new Response(undefined, {
         status: 200,
       });
     }
 
-    if (pathname === "/status") {
+    /**
+     * For getting the status of the bar
+     *
+     * GET /status
+     *
+     * Returns a 200 OK response with the status of the bar
+     */
+    if (pathname === "/status" && req.method === "GET") {
       const status = await getStatus();
 
       return new Response(status ? "OPEN" : "CLOSED", {
@@ -34,7 +56,14 @@ Deno.serve({
       });
     }
 
-    if (pathname === "/status/toggle") {
+    /**
+     * For toggling the status of the bar
+     *
+     * POST /status
+     *
+     * Returns a 200 OK response with the new status of the bar
+     */
+    if (pathname === "/status" && req.method === "POST") {
       const status = await getStatus();
 
       await setStatus(!status);
@@ -44,6 +73,9 @@ Deno.serve({
       });
     }
 
+    /**
+     * If no valid route is found send a 404 response with a message
+     */
     return new Response("Only /, /status and /status/toggle are supported", {
       status: 404,
     });
