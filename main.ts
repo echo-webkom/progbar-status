@@ -1,3 +1,7 @@
+import { decode } from "https://deno.land/std@0.201.0/encoding/base64.ts";
+import { load } from "https://deno.land/std@0.201.0/dotenv/mod.ts";
+
+const env = await load();
 const db = await Deno.openKv();
 
 /**
@@ -64,6 +68,18 @@ Deno.serve({
      * Returns a 200 OK response with the new status of the bar
      */
     if (pathname === "/status" && req.method === "POST") {
+      const adminKey = env["ADMIN_KEY"];
+
+      if (adminKey) {
+        const auth = req.headers.get("Authorization")?.split(" ")[1];
+
+        if (auth !== adminKey) {
+          return new Response("Unauthorized. Provide a valid bearer token.", {
+            status: 401,
+          });
+        }
+      }
+
       const status = await getStatus();
 
       await setStatus(!status);
