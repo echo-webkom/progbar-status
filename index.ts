@@ -1,35 +1,46 @@
-import { decode } from "https://deno.land/std@0.201.0/encoding/base64.ts";
-import { load } from "https://deno.land/std@0.201.0/dotenv/mod.ts";
+import { Database } from "bun:sqlite";
 
-const env = await load();
-const db = await Deno.openKv();
+const db = new Database("db.sqlite");
+
+// Create the table if it doesn't exist
+db.query(
+  "CREATE TABLE IF NOT EXISTS status (value BOOLEAN NOT NULL DEFAULT FALSE)"
+).run();
 
 /**
  * Gets the open/closed status of the bar
  * @returns {Promise<boolean>} The open/closed status of the bar
  */
-async function getStatus() {
-  const status = await db.get<boolean>(["status"]);
+function getStatus() {
+  const query = db.prepare("SELECT value FROM status");
 
-  if (status.value === null) {
-    await setStatus(false);
+  const status = query.get() as {
+    value: number;
+  };
+
+  if (status === null) {
+    db.query("INSERT INTO status (value) VALUES (FALSE)").run();
+
     return false;
   }
 
-  return status.value;
+  return status.value === 1;
 }
 
 /**
  * Sets the open/closed status of the bar
  * @param {boolean} value
  */
-async function setStatus(value: boolean) {
-  await db.set(["status"], value);
+function setStatus(value: boolean) {
+  const query = db.prepare("UPDATE status SET value = ?");
+
+  query.run(value ? 1 : 0);
+
+  return !value;
 }
 
-Deno.serve({
-  hostname: "0.0.0.0",
-  handler: async (req) => {
+const server = Bun.serve({
+  fetch: (req) => {
     const pathname = new URL(req.url).pathname;
 
     /**
@@ -53,7 +64,7 @@ Deno.serve({
      * Returns a 200 OK response with the status of the bar
      */
     if (pathname === "/status" && req.method === "GET") {
-      const status = await getStatus();
+      const status = getStatus();
 
       return new Response(status ? "OPEN" : "CLOSED", {
         status: 200,
@@ -68,8 +79,11 @@ Deno.serve({
      * Returns a 200 OK response with the new status of the bar
      */
     if (pathname === "/status" && req.method === "POST") {
-      const adminKey = env["ADMIN_KEY"];
+      const adminKey = Bun.env.API_KEY;
 
+      /**
+       * If there is an admin key set, check if the request has a valid bearer token.
+       */
       if (adminKey) {
         const auth = req.headers.get("Authorization")?.split(" ")[1];
 
@@ -80,9 +94,9 @@ Deno.serve({
         }
       }
 
-      const status = await getStatus();
+      const status = getStatus();
 
-      await setStatus(!status);
+      setStatus(!status);
 
       return new Response(!status ? "OPEN" : "CLOSED", {
         status: 200,
@@ -96,7 +110,6 @@ Deno.serve({
       status: 404,
     });
   },
-  onListen({ port, hostname }) {
-    console.log(`🚀 Server started at http://${hostname}:${port}`);
-  },
 });
+
+console.log(`🚀 Server started at http://${server.hostname}:${server.port}`);
