@@ -1,6 +1,2 @@
 .env*
 !.env.example
-.DS_Store
-node_modules/
-*.sqlite
-.vscode/
