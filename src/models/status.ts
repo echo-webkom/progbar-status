@@ -20,7 +20,7 @@ const getStatusText = (status: Status) => {
  * Gets the open/closed status of the bar
  * @returns {Promise<boolean>} The open/closed status of the bar
  */
-export function getStatus(): { status: Status; text: string } {
+export function getStatus(): { status: Status; message: string } {
   const query = db.prepare("SELECT value FROM status");
 
   const status = query.get() as {
@@ -32,13 +32,13 @@ export function getStatus(): { status: Status; text: string } {
 
     return {
       status: Status.Closed,
-      text: getStatusText(Status.Closed),
+      message: getStatusText(Status.Closed),
     };
   }
 
   return {
     status: status.value,
-    text: getStatusText(status.value),
+    message: getStatusText(status.value),
   };
 }
 

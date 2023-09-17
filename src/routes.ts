@@ -21,12 +21,12 @@ export function handleRoot() {
  * Returns a 200 OK response with the status of the bar
  */
 export function handleStatus() {
-  const { status, text } = getStatus();
+  const { status, message } = getStatus();
 
   return new Response(
     JSON.stringify({
       status,
-      text,
+      message,
     }),
     {
       status: 200,
@@ -68,12 +68,12 @@ export function handleUpdateStatus(req: Request) {
 
   setStatus(newStatus);
 
-  const { status, text } = getStatus();
+  const { status, message } = getStatus();
 
   return new Response(
     JSON.stringify({
       status,
-      text,
+      message,
     }),
     {
       status: 200,
