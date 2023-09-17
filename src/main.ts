@@ -1,6 +1,6 @@
 import { setUpDatabase } from "./db";
 import { handleRoot, handleStatus, handleUpdateStatus } from "./routes";
-import { SimpleRouter } from "./simple-router";
+import { SimpleRouter } from "../simple-router";
 
 setUpDatabase();
 
