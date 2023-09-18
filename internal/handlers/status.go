@@ -1,61 +1,94 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/omfj/lol/internal/models"
 	"github.com/omfj/lol/internal/security"
 )
 
-func GetStatus(c *gin.Context) {
-	status, err := models.GetStatus()
-	if err != nil {
-		c.Data(http.StatusInternalServerError, "text/plain", []byte("failed to get status"))
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"status": status,
-	})
+type StatusResponse struct {
+	Status string `json:"status"`
 }
 
-func UpdateStatus(c *gin.Context) {
-	status := c.Query("status")
+func GetStatusHandler(w http.ResponseWriter, r *http.Request) {
+	// Get current status
+	status, err := models.GetStatus()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to get status"))
+		return
+	}
 
+	statusStruct := StatusResponse{Status: status}
+	statusJson, err := json.Marshal(statusStruct)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to marshal status"))
+		return
+	}
+
+	// Return current status
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(statusJson))
+}
+
+func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
+	status := r.URL.Query().Get("status")
+
+	// Check if status is set
 	if status == "" {
-		c.Data(http.StatusBadRequest, "text/plain", []byte("status query parameter is required"))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("status query parameter is required"))
 		return
 	}
 
-	token := c.GetHeader("Authorization")
+	// Get token from header
+	token := r.Header.Get("Authorization")
 	if token == "" {
-		c.Data(http.StatusUnauthorized, "text/plain", []byte("authorization header is required"))
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("authorization header is required"))
 		return
 	}
 
+	// Remove "Bearer" from token and validate it
 	token = strings.Split(token, " ")[1]
-
 	err := security.ValidateToken(token)
 	if err != nil {
-		c.Data(http.StatusUnauthorized, "text/plain", []byte("invalid token"))
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("invalid token"))
 		return
 	}
 
+	// Set to desired status
 	err = models.SetStatus(status)
 	if err != nil {
-		c.Data(http.StatusInternalServerError, "text/plain", []byte("failed to set status"))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to set status"))
 		return
 	}
 
+	// Get updated status
 	status, err = models.GetStatus()
 	if err != nil {
-		c.Data(http.StatusInternalServerError, "text/plain", []byte("failed to get status"))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to get status"))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status": status,
-	})
+	statusStruct := StatusResponse{Status: status}
+	statusJson, err := json.Marshal(statusStruct)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to marshal status"))
+		return
+	}
+
+	// Return updated status
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(statusJson))
 }

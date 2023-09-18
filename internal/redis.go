@@ -19,7 +19,7 @@ func (d *Redis) Connect() error {
 		DB:       0,
 	})
 
-	_, err := RDB.Ping().Result()
+	err := RDB.Ping().Err()
 
 	return err
 }
