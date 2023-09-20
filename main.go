@@ -5,12 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	redis "github.com/omfj/lol/internal"
-	h "github.com/omfj/lol/internal/handlers"
 )
 
 func main() {
-	redis := &redis.Redis{
+	redis := &Redis{
 		Addr: "localhost:6379",
 	}
 
@@ -20,9 +18,9 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", h.HealthCheckHandler).Methods("GET")
-	r.HandleFunc("/status", h.GetStatusHandler).Methods("GET")
-	r.HandleFunc("/status", h.UpdateStatusHandler).Methods("POST")
+	r.HandleFunc("/", HealthCheckHandler).Methods("GET")
+	r.HandleFunc("/status", GetStatusHandler).Methods("GET")
+	r.HandleFunc("/status", UpdateStatusHandler).Methods("POST")
 	http.Handle("/", r)
 
 	log.Default().Println("Listening on port 8000")

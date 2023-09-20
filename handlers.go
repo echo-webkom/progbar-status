@@ -1,21 +1,31 @@
-package handlers
+package main
 
 import (
 	"encoding/json"
 	"net/http"
 	"strings"
-
-	"github.com/omfj/lol/internal/models"
-	"github.com/omfj/lol/internal/security"
 )
 
 type StatusResponse struct {
 	Status string `json:"status"`
 }
 
+func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	// Check redis connection
+	err := RDB.Ping().Err()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("redis connection failed"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
+}
+
 func GetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	// Get current status
-	status, err := models.GetStatus()
+	status, err := GetStatus()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to get status"))
@@ -56,7 +66,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Remove "Bearer" from token and validate it
 	token = strings.Split(token, " ")[1]
-	err := security.ValidateToken(token)
+	err := ValidateToken(token)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("invalid token"))
@@ -64,7 +74,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set to desired status
-	err = models.SetStatus(status)
+	err = SetStatus(status)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to set status"))
@@ -72,7 +82,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get updated status
-	status, err = models.GetStatus()
+	status, err = GetStatus()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to get status"))
