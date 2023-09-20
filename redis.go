@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/go-redis/redis"
 )
 
@@ -8,14 +10,17 @@ var (
 	RDB *redis.Client
 )
 
-type Redis struct {
-	Addr string
-}
+func ConnectToRedis() error {
+	redisUrl := os.Getenv("REDIS_URL")
+	if redisUrl == "" {
+		redisUrl = "localhost:6379"
+	}
 
-func (d *Redis) Connect() error {
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
 	RDB = redis.NewClient(&redis.Options{
-		Addr:     d.Addr,
-		Password: "",
+		Addr:     redisUrl,
+		Password: redisPassword,
 		DB:       0,
 	})
 

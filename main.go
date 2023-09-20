@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -11,11 +12,12 @@ import (
 func main() {
 	godotenv.Load()
 
-	redis := &Redis{
-		Addr: "localhost:6379",
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
 
-	err := redis.Connect()
+	err := ConnectToRedis()
 	if err != nil {
 		panic(err)
 	}
@@ -27,5 +29,5 @@ func main() {
 	http.Handle("/", r)
 
 	log.Default().Println("Listening on port 8000")
-	log.Fatal(http.ListenAndServe(":8000", r))
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }

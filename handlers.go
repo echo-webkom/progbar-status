@@ -29,7 +29,6 @@ func GetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	message := getMessage(status)
-
 	statusStruct := StatusResponse{Status: status, Message: message}
 	statusJson, err := json.Marshal(statusStruct)
 	if err != nil {

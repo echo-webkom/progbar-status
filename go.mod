@@ -1,9 +1,8 @@
-module github.com/omfj/lol
+module github.com/echo-webkom/progbar-status
 
 go 1.21.1
 
 require (
-	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis v6.15.9+incompatible
 )
 
