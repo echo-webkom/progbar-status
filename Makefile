@@ -3,3 +3,6 @@ build:
 
 run: build
 	./bin/status
+
+dev:
+	air

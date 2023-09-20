@@ -6,10 +6,6 @@ import (
 	"strings"
 )
 
-type StatusResponse struct {
-	Status string `json:"status"`
-}
-
 func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	// Check redis connection
 	err := RDB.Ping().Err()
@@ -32,7 +28,9 @@ func GetStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	statusStruct := StatusResponse{Status: status}
+	message := getMessage(status)
+
+	statusStruct := StatusResponse{Status: status, Message: message}
 	statusJson, err := json.Marshal(statusStruct)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -47,12 +45,11 @@ func GetStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
-	status := r.URL.Query().Get("status")
-
-	// Check if status is set
-	if status == "" {
+	payload := StatusPayload{}
+	err := json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("status query parameter is required"))
+		w.Write([]byte("invalid payload"))
 		return
 	}
 
@@ -66,7 +63,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Remove "Bearer" from token and validate it
 	token = strings.Split(token, " ")[1]
-	err := ValidateToken(token)
+	err = ValidateToken(token)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("invalid token"))
@@ -74,7 +71,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set to desired status
-	err = SetStatus(status)
+	err = SetStatus(payload.Status)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to set status"))
@@ -82,14 +79,15 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get updated status
-	status, err = GetStatus()
+	status, err := GetStatus()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to get status"))
 		return
 	}
 
-	statusStruct := StatusResponse{Status: status}
+	message := getMessage(status)
+	statusStruct := StatusResponse{Status: status, Message: message}
 	statusJson, err := json.Marshal(statusStruct)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -101,4 +99,15 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(statusJson))
+}
+
+func getMessage(status int) string {
+	switch status {
+	case 0:
+		return "Programmerbar er stengt."
+	case 1:
+		return "Programmerbar er åpen."
+	default:
+		return "Ukjent status"
+	}
 }

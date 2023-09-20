@@ -1,9 +1,16 @@
 package main
 
-func SetStatus(status string) error {
+import "strconv"
+
+func SetStatus(status int) error {
 	return RDB.Set("status", status, 0).Err()
 }
 
-func GetStatus() (string, error) {
-	return RDB.Get("status").Result()
+func GetStatus() (int, error) {
+	status, err := RDB.Get("status").Result()
+	if err != nil {
+		return 0, err
+	}
+
+	return strconv.Atoi(status)
 }

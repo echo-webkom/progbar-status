@@ -5,9 +5,12 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
+
 	redis := &Redis{
 		Addr: "localhost:6379",
 	}
