@@ -7,13 +7,13 @@ Used for getting and updating the status of echo Programmerbar.
 Run the server with:
 
 ```sh
-bun run start
+make run
 ```
 
 Run the server in development mode with:
 
 ```sh
-bun run dev
+make dev
 ```
 
 ## Routes
@@ -27,13 +27,13 @@ Does nothing. Is only used to check if the server is up.
 Returns the current status of echo Programmerbar, in JSON format.
 
 ```sh
-curl -X GET "http://localhost:3000/status"
+curl -X GET "http://localhost:8080/status"
 ```
 
 ```json
 {
-  "status": 1,
-  "message": "Baren er åpen"
+  "status": number,
+  "message": string
 }
 ```
 
@@ -44,23 +44,27 @@ Possible status codes:
 
 ### `POST /status`
 
-Updates the status of echo Programmerbar, and returns the new status. Requires `status` in the search parameters to update the status.
+Updates the status of echo Programmerbar, and returns the new status. This requires a JSON body with the following format:
+
+```json
+{
+  "status": number,
+}
+```
 
 ```sh
-curl -X POST "http://localhost:3000/status?status=1"
+curl -X POST "http://localhost:8080/status" \
+  -H "Content-Type: application/json" \
+  -d '{"status": 1}'
 ```
 
 ```json
 {
-  "status": 1,
-  "message": "Baren er åpen"
+  "status": number,
+  "message": string
 }
 ```
 
 ## TODO
 
 - [ ] Add tests to test the API
-
-## Simple Router
-
-This is a simple router to make it to create routes.
