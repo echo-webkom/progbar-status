@@ -12,5 +12,6 @@ if [[ -z "$PROGRAMMERBAR_API_TOKEN" ]]; then
   exit 1
 fi
 
-curl -X POST https://programmerbar-status.fly.dev/status?status=$NEW_STATUS \
-    -H "Authorization: Bearer $PROGRAMMERBAR_API_TOKEN"
+curl -X POST https://programmerbar.fly.dev/status \
+    -H "Authorization: Bearer $PROGRAMMERBAR_API_TOKEN" \
+    -d "{\"status\": $NEW_STATUS}"
