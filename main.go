@@ -28,6 +28,6 @@ func main() {
 	r.HandleFunc("/status", UpdateStatusHandler).Methods("POST")
 	http.Handle("/", r)
 
-	log.Default().Println("Listening on port 8000")
+	log.Default().Println("Listening on port http://localhost:" + port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
 }

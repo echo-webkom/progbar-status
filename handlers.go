@@ -21,7 +21,7 @@ func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	// Get current status
-	status, err := GetStatus()
+	status, err := GetOrSetStatus()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to get status"))
