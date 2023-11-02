@@ -2,6 +2,8 @@
 
 Used for getting and updating the status of echo Programmerbar.
 
+hello
+
 ## Running
 
 Run the server with:
